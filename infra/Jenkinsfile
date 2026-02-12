@@ -24,18 +24,79 @@ pipeline{
             }
         }
 
-        stage('Package'){
+        stage('Build JAR'){
             steps{
                 echo 'Packaging application'
                 sh 'mvn package -DskipTests'
             }
         }
+
+        stage('Build Docker Image'){
+            steps{
+                echo 'Building Docker Image'\
+                script{
+                    dockerImage = docker.build("${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}")
+                    docker.build("${DOCKER_IMAGE_NAME}:latest")
+                }
+            }
+        }
+
+        stage('Push to registry'){
+            steps{
+                echo 'Pushing Docker image to registry'
+                script{
+                    docker.withRegistry("https://${DOCKER_REGISTRY}",DOCKER_CREDENTIALS_ID){
+                        dockerImage.push("${BUILD_NUMBER}")
+                        dockerImage.push(latest)
+                    }
+                }
+            }
+        }
+
+        stage('Cleanup'){
+            steps{
+                echo 'Cleaning up local Docker Images'
+                sh """
+                    docker rmi ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} || true
+                    docker rmi ${DOCKER_IMAGE_NAME}:latest || true
+                """
+            }
+        }
+
+        stage('Deploy to Kubernetes'){
+            steps{
+                echo 'Deploying to Kubernetes cluster'
+                script {
+                    sh"""
+                        sed -i 's|image: .*|image:${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}'|g' k8s/app-deployment.yaml
+                    """
+                    //Apply Kubernetes Manifests
+                    sh """
+                        kubectl apply -f k8s/namespace.yaml
+                        kubectl apply -f k8s/configmap.yaml
+                        kubectl apply -f k8s/secret.yaml
+                        kubectl apply -f k8s/postgres-pvc.yaml
+                        kubectl apply -f k8s/postgres-deployment.yaml
+                        kubectl apply -f k8s/postgres-service.yaml
+                        kubectl apply -f k8s/app-deployment.yaml
+                        kubectl apply -f k8s/app-service.yaml
+                    """
+
+                    //Waiting for roll-out to complete
+                    sh """
+                        kubectl rollout status deployment/user-registration-app -n user-registration
+                        --timeout=5m
+                    """
+
+                }
+            }
+        }
+
     }//end of stages
 
 post{
     success{
         echo 'Build successful'
-        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         cleanWs()
     }
     failure{
