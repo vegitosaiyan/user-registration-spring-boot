@@ -1,0 +1,51 @@
+@"
+pipeline{
+agent any
+
+tools{
+    maven 'Maven-3.9'
+    jdk 'Java-21'
+}
+
+environment{ MAVEN_OPTS= '-Duser.timezone=UTCm'}
+
+
+stages{
+    stage('Checkout'){
+        steps{
+            echo 'Checking out code from Github'
+            checkout scm
+        }
+    }
+
+    stage('Build'){
+        steps{
+            echo 'Building the project'
+            bat 'mvn clean compile'
+        }
+    }
+
+    stage('Package'){
+        steps{
+            echo 'Packaging application'
+            bat 'mvn package -DskipTests'
+        }
+    }
+}//end of stages
+
+}//end of pipeline
+
+post{
+    success{
+        echo 'Build successful'
+        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+    }
+    failure{
+        echo 'Build failed'
+    }
+    always{
+        echo 'Cleaning up workspace'
+        cleanWs()
+    }
+}//end of post
+"@ | Out-File -Encoding UTF8 JenkinsFile
