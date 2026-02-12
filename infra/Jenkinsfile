@@ -36,12 +36,10 @@ post{
     success{
         echo 'Build successful'
         archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+        cleanWs()
     }
     failure{
         echo 'Build failed'
-    }
-    always{
-        echo 'Cleaning up workspace'
         cleanWs()
     }
 }//end of post
