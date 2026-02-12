@@ -1,39 +1,36 @@
-@"
 pipeline{
-agent any
+    agent any
 
-tools{
-    maven 'Maven-3.9'
-    jdk 'Java-21'
-}
-
-environment{ MAVEN_OPTS= '-Duser.timezone=UTCm'}
-
-
-stages{
-    stage('Checkout'){
-        steps{
-            echo 'Checking out code from Github'
-            checkout scm
-        }
+    tools{
+        maven 'Maven-3.9'
+        jdk 'Java-21'
     }
 
-    stage('Build'){
-        steps{
-            echo 'Building the project'
-            bat 'mvn clean compile'
-        }
-    }
+    environment{ MAVEN_OPTS= '-Duser.timezone=UTCm'}
 
-    stage('Package'){
-        steps{
-            echo 'Packaging application'
-            bat 'mvn package -DskipTests'
-        }
-    }
-}//end of stages
 
-}//end of pipeline
+    stages{
+        stage('Checkout'){
+            steps{
+               echo 'Checking out code from Github'
+               checkout scm
+            }
+        }
+
+        stage('Build'){
+            steps{
+                echo 'Building the project'
+                bat 'mvn clean compile'
+            }
+        }
+
+        stage('Package'){
+            steps{
+                echo 'Packaging application'
+                bat 'mvn package -DskipTests'
+            }
+        }
+    }//end of stages
 
 post{
     success{
@@ -48,4 +45,4 @@ post{
         cleanWs()
     }
 }//end of post
-"@ | Out-File -Encoding UTF8 JenkinsFile
+}//end of pipeline
