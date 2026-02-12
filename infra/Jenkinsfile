@@ -20,14 +20,14 @@ pipeline{
         stage('Build'){
             steps{
                 echo 'Building the project'
-                bat 'mvn clean compile'
+                sh 'mvn clean compile'
             }
         }
 
         stage('Package'){
             steps{
                 echo 'Packaging application'
-                bat 'mvn package -DskipTests'
+                sh 'mvn package -DskipTests'
             }
         }
     }//end of stages
