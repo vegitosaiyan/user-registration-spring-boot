@@ -73,7 +73,7 @@ pipeline{
                 echo 'Deploying to Kubernetes cluster'
                 script {
                     sh"""
-                        sed -i 's|image: .*|image:${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}'|g' infra/k8s/app-deployment.yaml
+                        sed -i 's|image: .*|image:${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}|g' infra/k8s/app-deployment.yaml
                     """
                     //Apply Kubernetes Manifests
                     sh """
