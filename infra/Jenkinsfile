@@ -50,10 +50,10 @@ pipeline{
             steps{
                 echo 'Pushing Docker image to registry'
                 script{
-                    docker.withRegistry("https://${DOCKER_REGISTRY}",DOCKER_CREDENTIALS_ID){
+
                         dockerImage.push("${BUILD_NUMBER}")
                         dockerImage.push('latest')
-                    }
+
                 }
             }
         }
